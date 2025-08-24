@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Flyflow Transaction — Book & Track</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b1020;
+      --card: #121933;
+      --muted: #9aa4bf;
+      --text: #eaf0ff;
+      --accent: #6aa8ff;
+      --accent-2: #7ef0d9;
+      --danger: #ff6b6b;
+      --ring: rgba(122, 168, 255, .5);
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 16px;
+    }
+    * { box-sizing: border-box }
+    html, body { height: 100% }
+    body {
+      margin: 0; font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background: radial-gradient(1200px 700px at 20% -10%, #1a2241 10%, transparent 60%),
+                  radial-gradient(900px 600px at 120% 20%, #0f1530 0%, transparent 60%),
+                  linear-gradient(180deg, #0a0f22 0%, #0b1020 100%);
+      color: var(--text);
+    }
+    a { color: inherit; text-decoration: none }
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 20px }
+    .nav {
+      position: sticky; top: 0; z-index: 50;
+      backdrop-filter: saturate(140%) blur(14px);
+      background: rgba(10, 15, 34, .6);
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .nav-inner { display:flex; align-items:center; justify-content:space-between; padding: 14px 0 }
+    .brand { display:flex; align-items:center; gap:10px; font-weight:700 }
+    .brand-logo { width:28px; height:28px; display:grid; place-items:center; border-radius:10px; background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%); box-shadow: var(--shadow) }
+    .brand-logo svg { filter: drop-shadow(0 4px 10px rgba(0,0,0,.4)); }
+    .cta-btn { background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%); color:#0b1020; border:0; padding:10px 14px; border-radius: 12px; font-weight: 700; cursor:pointer; transition: transform .15s ease, box-shadow .2s ease; box-shadow: 0 8px 24px rgba(110, 168, 255, .25) }
+    .cta-btn:hover { transform: translateY(-1px); box-shadow: 0 12px 30px rgba(110, 168, 255, .35) }
+
+    .hero { padding: 60px 0 30px }
+    .hero-grid { display:grid; grid-template-columns: 1.2fr .8fr; gap:28px; align-items:center }
+    .headline { font-size: clamp(28px, 4vw, 46px); font-weight: 800; line-height: 1.05; letter-spacing: -0.02em }
+    .sub { color: var(--muted); margin-top: 10px; max-width: 55ch }
+    .hero-card { background: linear-gradient(180deg, rgba(255,255,255,.06), transparent 40%), var(--card); border: 1px solid rgba(255,255,255,.08); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow) }
+
+    .tabs { display:flex; gap:8px; background: rgba(255,255,255,.04); padding:6px; border-radius: 12px; width: fit-content; border:1px solid rgba(255,255,255,.06) }
+    .tab { padding:10px 14px; border-radius: 10px; font-weight: 600; color: var(--muted); cursor:pointer; border: 1px solid transparent }
+    .tab.active { background: #0f1733; color: var(--text); border-color: rgba(255,255,255,.08); box-shadow: inset 0 0 0 1px rgba(255,255,255,.04) }
+
+    .grid { display:grid; grid-template-columns: 1fr 1fr; gap:18px }
+    .card { background: var(--card); border:1px solid rgba(255,255,255,.08); border-radius: var(--radius); padding:16px; box-shadow: var(--shadow) }
+    .card h3 { margin: 0 0 10px; font-size: 18px }
+
+    .field { display:flex; flex-direction:column; gap:8px }
+    label { color: var(--muted); font-size: 13px }
+    input, select { background: #0f1733; color: var(--text); border:1px solid rgba(255,255,255,.1); border-radius: 12px; padding: 12px 12px; outline: none; transition: box-shadow .2s ease, border-color .2s ease; }
+    input:focus, select:focus { box-shadow: 0 0 0 4px var(--ring); border-color: var(--accent) }
+
+    .actions { display:flex; gap:10px; flex-wrap: wrap }
+    .btn { background:#14204a; border:1px solid rgba(255,255,255,.12); color: var(--text); padding:12px 14px; border-radius:12px; cursor:pointer; font-weight:700; transition: transform .15s ease, box-shadow .2s ease, background .2s ease }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 10px 22px rgba(0,0,0,.35) }
+    .btn.primary { background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%); color: #0b1020; border: none }
+    .btn.danger { background: linear-gradient(135deg, #ff8f8f, #ff6b6b) }
+
+    .results { display:grid; gap:10px; margin-top:12px }
+    .result { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:12px; background:#0f1733; border:1px solid rgba(255,255,255,.08); border-radius:12px }
+    .badge { font-size:12px; padding:6px 8px; border-radius:999px; background: rgba(122,168,255,.15); border:1px solid rgba(122,168,255,.35) }
+
+    .muted { color: var(--muted) }
+    .mini { font-size:12px }
+
+    .footer { text-align:center; color: var(--muted); padding: 36px 0 60px }
+
+    .split { display:grid; grid-template-columns: 1fr 1fr; gap:16px }
+    .timeline { display:flex; gap:10px; align-items:center; flex-wrap: wrap }
+    .dot { width:9px; height:9px; border-radius:999px; background: rgba(255,255,255,.25); border:1px solid rgba(255,255,255,.25) }
+    .dot.active { background: var(--accent-2); border-color: rgba(255,255,255,.65) }
+
+    .toast { position: fixed; right: 16px; bottom: 16px; background: var(--card); border:1px solid rgba(255,255,255,.12); padding: 12px 14px; border-radius: 12px; box-shadow: var(--shadow); display:none }
+
+    .empty { text-align:center; padding: 18px; border:1px dashed rgba(255,255,255,.2); border-radius: 12px; color: var(--muted) }
+
+    @media (max-width: 900px) {
+      .hero-grid { grid-template-columns: 1fr }
+      .grid { grid-template-columns: 1fr }
+      .split { grid-template-columns: 1fr }
+    }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <div class="container nav-inner">
+      <a class="brand" href="#">
+        <img src="brand-logo.jpg" alt="Description" class="brand-logo">
+          </svg>
+        </span>
+        <span>Flyflow Transaction</span>
+      </a>
+      <div class="actions">
+        <button class="btn" id="viewBookingsBtn">My Bookings</button>
+        <button class="cta-btn" id="getStartedBtn">Get Started</button>
+      </div>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <div class="container hero-grid">
+      <div>
+        <h1 class="headline">Book smarter. <span style="background: linear-gradient(135deg, var(--accent), var(--accent-2)); -webkit-background-clip:text; background-clip:text; color: transparent;">Track flights & baggage</span> effortlessly.</h1>
+        <p class="sub">A clean, modern travel experience with a fast booking flow, real-time style flight status.</p>
+        <div style="height:12px"></div>
+        <div class="tabs" role="tablist" aria-label="Booking & Tracking">
+          <button class="tab active" data-tab="book" role="tab" aria-selected="true">Book</button>
+          <button class="tab" data-tab="flight" role="tab" aria-selected="false">Flight Status</button>
+          <button class="tab" data-tab="baggage" role="tab" aria-selected="false">Baggage</button>
+          <button class="tab" data-tab="" role="tab" aria-selected="false">Smart Airport Navigation</button>
+          <button class="tab" data-tab="" role="tab" aria-selected="false">Duty-Free Pre-Orders</button>
+          <button class="tab" data-tab="" role="tab" aria-selected="false">AI-Based Travel Concierge</button>
+        </div>
+        <div style="height:16px"></div>
+        <section id="tab-book" class="hero-card" role="tabpanel" aria-labelledby="Book">
+          <div class="grid">
+            <div class="field">
+              <label for="from">From</label>
+              <input id="from" placeholder="e.g., MNL – Manila" autocomplete="off" />
+            </div>
+            <div class="field">
+              <label for="to">To</label>
+              <input id="to" placeholder="e.g., NRT – Tokyo" autocomplete="off" />
+            </div>
+            <div class="field">
+              <label for="depart">Depart</label>
+              <input id="depart" type="date" />
+            </div>
+            <div class="field">
+              <label for="return">Return</label>
+              <input id="return" type="date" />
+            </div>
+            <div class="field">
+              <label for="pax">Passengers</label>
+              <select id="pax">
+                <option>1 Adult</option>
+                <option>2 Adults</option>
+                <option>3 Adults</option>
+                <option>4 Adults</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="class">Class</label>
+              <select id="class">
+                <option>Economy</option>
+                <option>Premium Economy</option>
+                <option>Business</option>
+                <option>First</option>
+              </select>
+            </div>
+          </div>
+          <div style="height:12px"></div>
+          <div class="actions">
+            <button class="btn" id="swapBtn" aria-label="Swap From and To">Swap</button>
+            <button class="btn primary" id="searchBtn">Search Flights</button>
+          </div>
+          <div id="searchResults" class="results"></div>
+        </section>
+
+        <section id="tab-flight" class="hero-card" role="tabpanel" hidden>
+          <div class="grid">
+            <div class="field">
+              <label for="airline">Airline Code</label>
+              <input id="airline" placeholder="e.g., PR, 5J, SQ" />
+            </div>
+            <div class="field">
+              <label for="flightNo">Flight Number</label>
+              <input id="flightNo" placeholder="e.g., 102" />
+            </div>
+            <div class="field">
+              <label for="flightDate">Date</label>
+              <input id="flightDate" type="date" />
+            </div>
+          </div>
+          <div style="height:12px"></div>
+          <div class="actions">
+            <button class="btn primary" id="trackFlightBtn">Track Flight</button>
+          </div>
+          <div id="flightResult" class="results"></div>
+        </section>
+
+        <section id="tab-baggage" class="hero-card" role="tabpanel" hidden>
+          <div class="grid">
+            <div class="field">
+              <label for="pnr">PNR / Booking Code</label>
+              <input id="pnr" placeholder="e.g., 6-letter code (ABC123)" />
+            </div>
+            <div class="field">
+              <label for="bagTag">Bag Tag (optional)</label>
+              <input id="bagTag" placeholder="e.g., 012 345678" />
+            </div>
+          </div>
+          <div style="height:12px"></div>
+          <div class="actions">
+            <button class="btn primary" id="trackBagBtn">Track Baggage</button>
+          </div>
+          <div id="bagResult" class="results"></div>
+        </section>
+      </div>
+
+      <aside>
+        <div class="card">
+          <h3>Why Flyflow Transaction?</h3>
+          <ul class="mini muted" style="line-height:1.8; padding-left: 18px; margin: 8px 0 0">
+            <li>Clean, modern booking flow</li>
+            <li>Mock flight & baggage tracking</li>
+            <li>Local storage for saved bookings</li>
+            <li>Responsive, accessible UI</li>
+          </ul>
+        </div>
+        <div style="height:12px"></div>
+        <div class="card">
+          <h3>Demo Note</h3>
+          <p class="mini muted">This is just a Demo app functions.</p>
+        </div>
+      </aside>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <div class="split">
+        <div>
+          <h3>Saved Bookings</h3>
+          <div id="savedBookings" class="results"></div>
+        </div>
+        <div>
+          <h3>Tips</h3>
+          <p class="mini muted">Use the <b>Book</b> tab to search and create a booking. Your booking generates a PNR and Bag Tag for tracking in the <b>Baggage</b> tab. Try tracking a sample flight like <b>PR 102</b> on any date.</p>
+        </div>
+      </div>
+    </section>
+    <p class="footer mini">© <span id="year"></span> Flyflow Transaction — Demo UI</p>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    // ===== Utilities =====
+    const $ = (sel) => document.querySelector(sel);
+    const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+    const todayISO = () => new Date().toISOString().slice(0,10);
+
+    // init dates
+    $('#depart').min = todayISO();
+    $('#return').min = todayISO();
+    $('#flightDate').min = todayISO();
+
+    const toast = (msg) => {
+      const el = $('#toast');
+      el.textContent = msg; el.style.display = 'block';
+      setTimeout(() => el.style.display = 'none', 2200);
+    };
+
+    const persist = {
+      get() { return JSON.parse(localStorage.getItem('skyward-bookings') || '[]'); },
+      set(list) { localStorage.setItem('skyward-bookings', JSON.stringify(list)); renderBookings(); }
+    }
+
+    // ===== Tabs =====
+    $$('.tab').forEach(t => t.addEventListener('click', () => {
+      $$('.tab').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      const name = t.dataset.tab;
+      ['book','flight','baggage'].forEach(k => {
+        const sec = $('#tab-' + k);
+        sec.hidden = k !== name;
+      });
+    }));
+
+    // ===== Booking Search (Mock) =====
+    function generateItineraries({ from, to, depart, ret, pax, cabin }) {
+      // Create a few mock flights
+      const airlines = [
+        { code:'PR', name:'Philippine Airlines' },
+        { code:'5J', name:'Cebu Pacific' },
+        { code:'SQ', name:'Singapore Airlines' },
+        { code:'CX', name:'Cathay Pacific' }
+      ];
+      const results = Array.from({ length: 4 }).map((_, i) => {
+        const a = airlines[(from.length + to.length + i) % airlines.length];
+        const base = 120 + i * 40;
+        const price = (base + (pax.match(/\d+/)[0] * 20)).toFixed(0);
+        const departTime = `${8+i}:00`;
+        const arriveTime = `${11+i}:45`;
+        return { id: crypto.randomUUID(), airline: a.name, code: a.code, number: 100 + i,
+          from, to, depart, ret, pax, cabin, price, departTime, arriveTime };
+      });
+      return results;
+    }
+
+    function renderResults(list) {
+      const wrap = $('#searchResults');
+      wrap.innerHTML = '';
+      if (!list.length) { wrap.innerHTML = `<div class="empty">No flights found. Try different dates.</div>`; return; }
+      list.forEach(f => {
+        const row = document.createElement('div');
+        row.className = 'result';
+        row.innerHTML = `
+          <div>
+            <div><b>${f.code} ${f.number}</b> · ${f.airline}</div>
+            <div class="mini muted">${f.from} → ${f.to} · ${f.departTime} → ${f.arriveTime} · ${f.cabin}</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px">
+            <span class="badge">$${f.price}</span>
+            <button class="btn primary" data-book="${f.id}">Book</button>
+          </div>
+        `;
+        wrap.appendChild(row);
+      });
+    }
+
+    $('#swapBtn').addEventListener('click', () => {
+      const a = $('#from').value, b = $('#to').value; $('#from').value = b; $('#to').value = a;
+    });
+
+    $('#searchBtn').addEventListener('click', () => {
+      const from = $('#from').value.trim();
+      const to = $('#to').value.trim();
+      const depart = $('#depart').value; const ret = $('#return').value;
+      const pax = $('#pax').value; const cabin = $('#class').value;
+      if (!from || !to || !depart) { toast('Please fill From, To and Depart'); return; }
+      $('#searchResults').innerHTML = `<div class="empty">Searching flights…</div>`;
+      setTimeout(() => renderResults(generateItineraries({ from, to, depart, ret, pax, cabin })), 600);
+    });
+
+    $('#searchResults').addEventListener('click', (e) => {
+      const id = e.target?.dataset?.book; if (!id) return;
+      const node = e.target.closest('.result');
+      const [title, meta] = node.querySelectorAll('div');
+      const codeNum = title.textContent.split('·')[0].trim();
+      const [fromTo, times, cabin] = meta.textContent.split('·').map(s => s.trim());
+      // Create booking
+      const booking = {
+        id: crypto.randomUUID(),
+        pnr: makePNR(),
+        bagTag: makeBagTag(),
+        flight: codeNum,
+        route: fromTo,
+        times,
+        cabin,
+        createdAt: new Date().toISOString()
+      };
+      const list = persist.get();
+      persist.set([booking, ...list]);
+      toast(`Booked ${booking.flight}. PNR ${booking.pnr}`);
+    });
+
+    // ===== Saved Bookings =====
+    function renderBookings() {
+      const list = persist.get();
+      const wrap = $('#savedBookings');
+      wrap.innerHTML = '';
+      if (!list.length) { wrap.innerHTML = `<div class="empty">No saved bookings yet. Search above to book.</div>`; return; }
+      list.forEach(b => {
+        const row = document.createElement('div');
+        row.className = 'result';
+        row.innerHTML = `
+          <div>
+            <div><b>${b.flight}</b> · ${b.route}</div>
+            <div class="mini muted">${b.times} · ${b.cabin}</div>
+            <div class="mini">PNR: <b>${b.pnr}</b> · Bag Tag: <b>${b.bagTag}</b></div>
+          </div>
+          <div style="display:flex; gap:8px; align-items:center">
+            <button class="btn" data-track-flight="${b.flight}">Track Flight</button>
+            <button class="btn" data-track-bag="${b.pnr}|${b.bagTag}">Track Baggage</button>
+            <button class="btn danger" data-del="${b.id}">Delete</button>
+          </div>
+        `;
+        wrap.appendChild(row);
+      });
+    }
+
+    $('#savedBookings').addEventListener('click', (e) => {
+      const del = e.target?.dataset?.del;
+      if (del) {
+        const list = persist.get().filter(x => x.id !== del);
+        persist.set(list); toast('Booking removed'); return;
+      }
+      const flight = e.target?.dataset?.trackFlight;
+      if (flight) {
+        const [code, number] = flight.split(' ');
+        $('.tab[data-tab="flight"]').click();
+        $('#airline').value = code; $('#flightNo').value = number; $('#flightDate').value = todayISO();
+        $('#trackFlightBtn').click();
+      }
+      const bag = e.target?.dataset?.trackBag;
+      if (bag) {
+        const [pnr, bagTag] = bag.split('|');
+        $('.tab[data-tab="baggage"]').click();
+        $('#pnr').value = pnr; $('#bagTag').value = bagTag; $('#trackBagBtn').click();
+      }
+    });
+
+    // ===== Flight Tracking (Mock/Deterministic) =====
+    function seededRandom(seed) {
+      let h = 2166136261 >>> 0;
+      for (let i = 0; i < seed.length; i++) { h ^= seed.charCodeAt(i); h = Math.imul(h, 16777619); }
+      h >>>= 0; return () => (h = Math.imul(h ^ (h >>> 15), 2246822507) ^ Math.imul(h ^ (h >>> 13), 3266489909), ((h>>>0) / 2**32));
+    }
+
+    function mockFlightStatus(airline, number, date) {
+      const r = seededRandom(`${airline}${number}${date}`);
+      const statuses = ['On Time', 'Delayed', 'Departed', 'Landed', 'Cancelled'];
+      const gates = ['A2', 'B7', 'C3', 'D5'];
+      const terminals = ['T1', 'T2', 'T3'];
+      const idx = Math.floor(r()*statuses.length);
+      const depDelay = Math.floor(r()*90);
+      const arrDelay = Math.floor(r()*90);
+      return {
+        status: statuses[idx],
+        terminal: terminals[Math.floor(r()*terminals.length)],
+        gate: gates[Math.floor(r()*gates.length)],
+        depTime: `${String(8+Math.floor(r()*6)).padStart(2,'0')}:${String(Math.floor(r()*60)).padStart(2,'0')}`,
+        arrTime: `${String(11+Math.floor(r()*6)).padStart(2,'0')}:${String(Math.floor(r()*60)).padStart(2,'0')}`,
+        depDelay, arrDelay
+      };
+    }
+
+    $('#trackFlightBtn').addEventListener('click', () => {
+      const airline = $('#airline').value.trim().toUpperCase();
+      const number = $('#flightNo').value.trim();
+      const date = $('#flightDate').value || todayISO();
+      if (!airline || !number) { toast('Enter airline code and flight number'); return; }
+      $('#flightResult').innerHTML = `<div class="empty">Fetching status…</div>`;
+      setTimeout(() => {
+        const s = mockFlightStatus(airline, number, date);
+        $('#flightResult').innerHTML = `
+          <div class="result">
+            <div>
+              <div><b>${airline} ${number}</b> · ${date}</div>
+              <div class="mini muted">Terminal ${s.terminal} · Gate ${s.gate}</div>
+              <div class="mini">Scheduled: ${s.depTime} → ${s.arrTime}</div>
+            </div>
+            <div style="text-align:right">
+              <div class="badge">${s.status}</div>
+              <div class="mini muted">Dep Δ ${s.depDelay}m · Arr Δ ${s.arrDelay}m</div>
+            </div>
+          </div>`;
+      }, 500);
+    });
+
+    // ===== Baggage Tracking (Mock) =====
+    const BAG_STEPS = ['Checked-In','Security Cleared','Loaded','In Transit','Unloaded','At Carousel','Delivered'];
+
+    function mockBagTimeline(pnr, tag) {
+      const r = seededRandom(`${pnr}${tag}`);
+      const n = 3 + Math.floor(r()*BAG_STEPS.length);
+      return BAG_STEPS.map((s, i) => ({ label: s, active: i < n }));
+    }
+
+    $('#trackBagBtn').addEventListener('click', () => {
+      const pnr = $('#pnr').value.trim().toUpperCase();
+      const tag = $('#bagTag').value.trim() || makeBagTag();
+      if (!pnr || pnr.length < 5) { toast('Enter a valid PNR/booking code'); return; }
+      $('#bagResult').innerHTML = `<div class="empty">Locating baggage…</div>`;
+      setTimeout(() => {
+        const steps = mockBagTimeline(pnr, tag);
+        $('#bagResult').innerHTML = `
+          <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center">
+              <div><b>PNR ${pnr}</b> · Bag ${tag}</div>
+              <span class="badge">${steps.findLast?.(s=>s.active)?.label || 'In Progress'}</span>
+            </div>
+            <div style="height:10px"></div>
+            <div class="timeline">${steps.map(s=>`<span class="dot ${s.active?'active':''}" title="${s.label}"></span>`).join('')} </div>
+            <div class="mini muted" style="margin-top:6px">${steps.map(s=>s.active?`<b>${s.label}</b>`:s.label).join(' · ')}</div>
+          </div>`;
+      }, 500);
+    });
+
+    // ===== Helpers =====
+    function makePNR() {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      return Array.from({length:6}, () => chars[Math.floor(Math.random()*chars.length)]).join('');
+    }
+    function makeBagTag() {
+      return `${String(200+Math.floor(Math.random()*700))} ${String(Math.floor(100000+Math.random()*899999))}`;
+    }
+
+    // ===== Nav Actions =====
+    $('#getStartedBtn').addEventListener('click', () => {
+      $('.tab[data-tab="book"]').click();
+      $('#from').focus();
+    });
+
+    $('#viewBookingsBtn').addEventListener('click', () => {
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    });
+
+    // init
+    document.addEventListener('DOMContentLoaded', () => { renderBookings(); $('#year').textContent = new Date().getFullYear(); });
+  </script>
+</body>
+</html>
